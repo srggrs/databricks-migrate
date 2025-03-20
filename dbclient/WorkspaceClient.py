@@ -29,7 +29,7 @@ class WorkspaceClient(dbclient):
         self._checkpoint_service = checkpoint_service
         self.groups_to_keep = configs.get("groups_to_keep", False)
         self.skip_missing_users = configs['skip_missing_users']
-        self.skip_large_nb = configs['skip_large_nb']
+        self.skip_large_nb = configs.get('skip_large_nb', None)
 
     _languages = {'.py': 'PYTHON',
                   '.scala': 'SCALA',
@@ -209,7 +209,7 @@ class WorkspaceClient(dbclient):
         )
         try:
             num_of_nbs = self.log_all_workspace_items(
-                user_root, workspace_log_writer, libs_log_writer, dir_log_writer, checkpoint_item_log_set)
+                user_root, workspace_log_writer, libs_log_writer, dir_log_writer, None, checkpoint_item_log_set)
         finally:
             workspace_log_writer.close()
             libs_log_writer.close()
