@@ -267,52 +267,49 @@ class WorkspaceClient(dbclient):
         for root, subdirs, files in self.walk(notebook_dir):
             upload_dir = '/' + root.replace(notebook_dir, '')
             target_dir = upload_dir
-            # print(f"upload dir: '{upload_dir}'")
             # if the upload dir is the 2 root directories, skip and continue
             if upload_dir == '/' or upload_dir == '/Users':
                 continue
             if not self.is_user_ws_root(upload_dir):
-                print(f"upload dir: '{upload_dir}'")
                 if self.target_root != "":
                     target_dir = upload_dir.replace(user_root, user_root + '/' + self.target_root)
 
-                print(f"target dir: '{target_dir}'")
                 # if it is not the /Users/example@example.com/ root path, don't create the folder
-                # resp_mkdirs = self.post(WS_MKDIRS, {'path': target_dir})
-                # print(resp_mkdirs)
-            # for f in files:
-            #     # get full path for the local notebook file
-            #     local_file_path = os.path.join(root, f)
-            #     # create upload path and remove file format extension
-            #     ws_file_path = target_dir + '/' + f
-            #     # generate json args with binary data for notebook to upload to the workspace path
-            #     nb_input_args = self.get_user_import_args(local_file_path, ws_file_path)
-            #     # call import to the workspace
-            #     if self.is_verbose():
-            #         print("Path: {0}".format(nb_input_args['path']))
-            #     resp_upload = self.post(WS_IMPORT, nb_input_args)
-            #     if self.is_verbose():
-            #         print(resp_upload)
+                resp_mkdirs = self.post(WS_MKDIRS, {'path': target_dir})
+                print(resp_mkdirs)
+            for f in files:
+                # get full path for the local notebook file
+                local_file_path = os.path.join(root, f)
+                # create upload path and remove file format extension
+                ws_file_path = target_dir + '/' + f
+                # generate json args with binary data for notebook to upload to the workspace path
+                nb_input_args = self.get_user_import_args(local_file_path, ws_file_path)
+                # call import to the workspace
+                if self.is_verbose():
+                    print("Path: {0}".format(nb_input_args['path']))
+                resp_upload = self.post(WS_IMPORT, nb_input_args)
+                if self.is_verbose():
+                    print(resp_upload)
 
-        # # import the user's workspace ACLs
-        # notebook_acl_logs = user_import_dir + f'/{username}/acl_notebooks.log'
-        # acl_notebooks_error_logger = logging_utils.get_error_logger(
-        #     wmconstants.WM_IMPORT, wmconstants.WORKSPACE_NOTEBOOK_ACL_OBJECT, self.get_export_dir())
-        # if os.path.exists(notebook_acl_logs):
-        #     print(f"Importing the notebook acls for {username}")
-        #     with open(notebook_acl_logs, encoding='utf-8') as nb_acls_fp:
-        #         for nb_acl_str in nb_acls_fp:
-        #             self.apply_acl_on_object(nb_acl_str, acl_notebooks_error_logger)
+        # import the user's workspace ACLs
+        notebook_acl_logs = user_import_dir + f'/{username}/acl_notebooks.log'
+        acl_notebooks_error_logger = logging_utils.get_error_logger(
+            wmconstants.WM_IMPORT, wmconstants.WORKSPACE_NOTEBOOK_ACL_OBJECT, self.get_export_dir())
+        if os.path.exists(notebook_acl_logs):
+            print(f"Importing the notebook acls for {username}")
+            with open(notebook_acl_logs, encoding='utf-8') as nb_acls_fp:
+                for nb_acl_str in nb_acls_fp:
+                    self.apply_acl_on_object(nb_acl_str, acl_notebooks_error_logger)
 
-        # dir_acl_logs = user_import_dir + f'/{username}/acl_directories.log'
-        # acl_dir_error_logger = logging_utils.get_error_logger(
-        #     wmconstants.WM_IMPORT, wmconstants.WORKSPACE_DIRECTORY_ACL_OBJECT, self.get_export_dir())
-        # if os.path.exists(dir_acl_logs):
-        #     print(f"Importing the directory acls for {username}")
-        #     with open(dir_acl_logs, encoding='utf-8') as dir_acls_fp:
-        #         for dir_acl_str in dir_acls_fp:
-        #             self.apply_acl_on_object(dir_acl_str, acl_dir_error_logger)
-        # self.set_export_dir(original_export_dir)
+        dir_acl_logs = user_import_dir + f'/{username}/acl_directories.log'
+        acl_dir_error_logger = logging_utils.get_error_logger(
+            wmconstants.WM_IMPORT, wmconstants.WORKSPACE_DIRECTORY_ACL_OBJECT, self.get_export_dir())
+        if os.path.exists(dir_acl_logs):
+            print(f"Importing the directory acls for {username}")
+            with open(dir_acl_logs, encoding='utf-8') as dir_acls_fp:
+                for dir_acl_str in dir_acls_fp:
+                    self.apply_acl_on_object(dir_acl_str, acl_dir_error_logger)
+        self.set_export_dir(original_export_dir)
 
     def download_notebooks(self, ws_log_file='user_workspace.log', ws_dir='artifacts/', num_parallel=4):
         """
