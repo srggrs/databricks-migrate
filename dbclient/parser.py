@@ -398,6 +398,10 @@ def get_import_parser():
 
     parser.add_argument('--skip-missing-users', action='store_true', default=False,
                         help='Skip missing principles during import.')
+
+    parser.add_argument('--target-root-folder', type=str, action='store', default="",
+                        help='import data into under a root folder in the destination workspace')
+
     return parser
 
 
@@ -453,6 +457,9 @@ def build_client_config(profile, url, token, args):
         config['export_dir'] = 'azure_logs/'
     else:
         config['export_dir'] = 'gcp_logs/'
+
+    if 'target_root_folder' in args:
+        config['target_folder'] = args.target_root_folder
 
     config['use_checkpoint'] = args.use_checkpoint
     config['num_parallel'] = args.num_parallel
