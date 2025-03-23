@@ -29,8 +29,8 @@ class WorkspaceClient(dbclient):
         self._checkpoint_service = checkpoint_service
         self.groups_to_keep = configs.get("groups_to_keep", False)
         self.skip_missing_users = configs['skip_missing_users']
-        # self.skip_large_nb = configs['skip_large_nb']
-        self.skip_large_nb = None
+        self.skip_large_nb = configs.get('skip_large_nb', None)
+        self.target_root = configs.get('target_folder', '')
 
     _languages = {'.py': 'PYTHON',
                   '.scala': 'SCALA',
@@ -266,18 +266,24 @@ class WorkspaceClient(dbclient):
         notebook_dir = self.get_export_dir() + 'user_artifacts/'
         for root, subdirs, files in self.walk(notebook_dir):
             upload_dir = '/' + root.replace(notebook_dir, '')
+            target_dir = upload_dir
             # if the upload dir is the 2 root directories, skip and continue
             if upload_dir == '/' or upload_dir == '/Users':
                 continue
+
+            if self.target_root != "":
+                target_dir = upload_dir.replace(user_root, user_root + '/' + self.target_root)
+
+            # if it is not the /Users/example@example.com/ root path, create the folder
             if not self.is_user_ws_root(upload_dir):
-                # if it is not the /Users/example@example.com/ root path, don't create the folder
-                resp_mkdirs = self.post(WS_MKDIRS, {'path': upload_dir})
+                resp_mkdirs = self.post(WS_MKDIRS, {'path': target_dir})
                 print(resp_mkdirs)
+
             for f in files:
                 # get full path for the local notebook file
                 local_file_path = os.path.join(root, f)
                 # create upload path and remove file format extension
-                ws_file_path = upload_dir + '/' + f
+                ws_file_path = target_dir + '/' + f
                 # generate json args with binary data for notebook to upload to the workspace path
                 nb_input_args = self.get_user_import_args(local_file_path, ws_file_path)
                 # call import to the workspace
